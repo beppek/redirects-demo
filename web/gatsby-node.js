@@ -46,6 +46,31 @@ async function createBlogPostPages (graphql, actions) {
     })
 }
 
+async function createRedirects (graphql, actions) {
+  const {createRedirect} = actions
+  const result = await graphql(`
+  {
+    redirects: allSanityRedirect {
+      nodes {
+        fromPath
+        toPath
+        statusCode
+      }
+    }
+  }
+  `)
+  result.data.redirects.nodes.forEach((redirect) => {
+    createRedirect({
+      fromPath: redirect.fromPath,
+      toPath: redirect.toPath,
+      statusCode: redirect.statusCode
+    })
+  })
+}
+
 exports.createPages = async ({graphql, actions}) => {
-  await createBlogPostPages(graphql, actions)
+  await Promise.all([
+    createBlogPostPages(graphql, actions),
+    createRedirects(graphql, actions)
+  ])
 }
